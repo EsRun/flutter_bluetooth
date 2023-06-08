@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_bluetooth/chart_create.dart';
-import 'package:flutter_bluetooth/line_chart.dart';
-import 'package:flutter_bluetooth/pie_chart.dart';
 
+import 'DeviceScreen.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final title = 'Bluetooth Chart';
-
+  final title = '수소센서 모니터링';
   late final BluetoothDevice blue;
   @override
   Widget build(BuildContext context) {
@@ -21,11 +18,9 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
-
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -34,7 +29,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   // 장치명을 지정해 해당 장치만 표시되게함
   // final String targetDeviceName = 'buz';
-  List<double> points = [50, 90, 1003, 500, 150, 120, 200, 80];
+
   FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
   List<ScanResult> scanResultList = [];
   bool _isScanning = false;
@@ -65,6 +60,26 @@ class _MyHomePageState extends State<MyHomePage> {
       // 스캔 시작, 제한 시간 4초
       flutterBlue.startScan(timeout: Duration(seconds: 4));
       // 스캔 결과 리스너
+      /*
+      flutterBlue.scanResults.listen((results) {
+        // 결과 값을 루프로 돌림
+        results.forEach((element) {
+          //찾는 장치명인지 확인
+          if (element.device.name == targetDeviceName) {
+            // 장치의 ID를 비교해 이미 등록된 장치인지 확인
+            if (scanResultList
+                .indexWhere((e) => e.device.id == element.device.id) <
+                0) {
+              // 찾는 장치명이고 scanResultList에 등록된적이 없는 장치라면 리스트에 추가
+              scanResultList.add(element);
+            }
+          }
+        });
+
+        // UI 갱신
+        setState(() {});
+      });
+      */
       flutterBlue.scanResults.listen((results) {
         // List<ScanResult> 형태의 results 값을 scanResultList에 복사
         scanResultList = results;
@@ -124,12 +139,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void onTap(ScanResult r) {
     // 단순히 이름만 출력
     print('${r.device.name}');
-    /*
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => DeviceScreen(device: r.device)),
     );
-    */
   }
 
   /* 장치 아이템 위젯 */
@@ -147,70 +160,19 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(
         title: Text(widget.title),
       ),
       body: Center(
-        child:Column(
-          children: <Widget>[
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 20, 0, 20),
-              child: CustomPaint(
-                size: Size(150, 150),
-                painter: PieCharts(
-                    percentage: 3,
-                    textScaleFactor: 1.5,
-                    textColor: Colors.blueGrey
-                ),
-              ),
-            ),
-            /*
-            Container(
-              alignment: Alignment.center,
-              height: 200,
-              child: Text(
-                  '10'
-              ,style: TextStyle(fontSize: 48),
-              )
-            ),
-            */
-            Container(
-              alignment: Alignment.center,
-              height: 60,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FractionallySizedBox(
-                      heightFactor: 1.0,
-                      child: OutlinedButton(
-                        onPressed: (){},
-                        child: Text("연결하기")
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FractionallySizedBox(
-                      heightFactor: 1.0,
-                      child: OutlinedButton(
-                          onPressed: (){},
-                          child: Text("연결끊기")
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 20, 0, 20),
-              child: CustomPaint(
-                size: Size(150, 150),
-                painter: LineCharts(points: points, pointSize: 5.0, pointColor: Colors.pinkAccent, lineColor: Colors.pinkAccent, lineWidth: 2.0),
-              ),
-            ),
-
-
-          ],
+        /* 장치 리스트 출력 */
+        child: ListView.separated(
+          itemCount: scanResultList.length,
+          itemBuilder: (context, index) {
+            return listItem(scanResultList[index]);
+          },
+          separatorBuilder: (BuildContext context, int index) {
+            return Divider();
+          },
         ),
       ),
       /* 장치 검색 or 검색 중지  */
